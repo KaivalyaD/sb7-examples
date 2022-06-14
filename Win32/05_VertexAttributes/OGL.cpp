@@ -453,9 +453,6 @@ void display(void)
 	// use the program object we created earlier for rendering
 	glUseProgram(rendering_program);
 
-	// update value of input vertex attribute 0
-	glVertexAttrib4fv(0, attrib);
-
 	// draw one triangle
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -481,6 +478,7 @@ void update(void)
 	attrib[1] = (float)cos(DEG_TO_RAD(arg)) * 0.6f;
 	attrib[2] = 0.0f;
 	attrib[3] = 0.0f;
+	glVertexAttrib4fv(0, attrib);	// update value of input vertex attribute 0
 }
 
 void uninitialize(void)
