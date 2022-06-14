@@ -48,12 +48,12 @@ static const GLchar *vertex_shader_source[] =
 	"                                                                   \n"
 	"void main(void)                                                    \n"
 	"{                                                                  \n"
-	"	const vec4 vertices[] = vec4[3](vec4( 0.25, -0.25, 0.5, 1.0),   \n"
-	"									vec4(-0.25, -0.25, 0.5, 1.0),   \n"
-	"									vec4( 0.25,  0.25, 0.5, 1.0));  \n"
+	"    const vec4 vertices[] = vec4[3](vec4( 0.25, -0.25, 0.5, 1.0),   \n"
+	"                                   vec4(-0.25, -0.25, 0.5, 1.0),   \n"
+	"                                   vec4( 0.25,  0.25, 0.5, 1.0));  \n"
 	"                                                                   \n"
-	"	// add `offset' to our hard-coded vertex position               \n"
-	"	gl_Position = vertices[gl_VertexID] + offset;                   \n"
+	"   // add `offset' to our hard-coded vertex position               \n"
+	"   gl_Position = vertices[gl_VertexID] + offset;                   \n"
 	"}                                                                  \n"
 };
 static const GLchar *fragment_shader_source[] =
@@ -64,7 +64,7 @@ static const GLchar *fragment_shader_source[] =
 	"                                           \n"
 	"void main(void)                            \n"
 	"{                                          \n"
-	"	color = vec4(0.0f, 0.8f, 1.0f, 1.0f);   \n"
+	"   color = vec4(0.0f, 0.8f, 1.0f, 1.0f);   \n"
 	"}                                          \n"
 };
 GLuint rendering_program;
