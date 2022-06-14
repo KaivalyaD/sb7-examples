@@ -78,7 +78,7 @@ static const GLchar *fragment_shader_source[] =
 	"{                                          \n"
 	"   // simply assign to `color', the input  \n"
 	"   // from the vertex shader `vs_color'    \n"
-	"   color = vs_color;                        \n"
+	"   color = vs_color;                       \n"
 	"}                                          \n"
 };
 GLuint rendering_program;
