@@ -496,7 +496,6 @@ void update(void)
 	colorVertexAttrib[1] = (float)cos(DEG_TO_RAD(arg)) * 0.5f + 0.5f;
 	colorVertexAttrib[2] = 0.0f;
 	colorVertexAttrib[3] = 1.0f;
-	// update value of input vertex attribute 0
 	glVertexAttrib4fv(1, colorVertexAttrib);
 }
 
