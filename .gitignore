@@ -1,3 +1,4 @@
 Log.txt
 Win32/**/*.obj
 Win32/**/*.res
+Win32/**/*.exe
