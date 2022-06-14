@@ -41,31 +41,31 @@ BOOL gbActiveWindow = FALSE;
 // shaders and programs
 static const GLchar *vertex_shader_source[] =
 {
-	"#version 450 core													\n"
-	"																	\n"
-	"// `offset' is an input vertex attribute							\n"
-	"layout (location = 0) in vec4 offset;								\n"
-	"																	\n"
-	"void main(void)													\n"
-	"{																	\n"
-	"	const vec4 vertices[] = vec4[3](vec4( 0.25, -0.25, 0.5, 1.0),	\n"
-	"									vec4(-0.25, -0.25, 0.5, 1.0),	\n"
-	"									vec4( 0.25,  0.25, 0.5, 1.0));	\n"
-	"																	\n"
-	"	// add `offset' to our hard-coded vertex position				\n"
-	"	gl_Position = vertices[gl_VertexID] + offset;					\n"
-	"}																	\n"
+	"#version 450 core                                                  \n"
+	"                                                                   \n"
+	"// `offset' is an input vertex attribute                           \n"
+	"layout (location = 0) in vec4 offset;                              \n"
+	"                                                                   \n"
+	"void main(void)                                                    \n"
+	"{                                                                  \n"
+	"	const vec4 vertices[] = vec4[3](vec4( 0.25, -0.25, 0.5, 1.0),   \n"
+	"									vec4(-0.25, -0.25, 0.5, 1.0),   \n"
+	"									vec4( 0.25,  0.25, 0.5, 1.0));  \n"
+	"                                                                   \n"
+	"	// add `offset' to our hard-coded vertex position               \n"
+	"	gl_Position = vertices[gl_VertexID] + offset;                   \n"
+	"}                                                                  \n"
 };
 static const GLchar *fragment_shader_source[] =
 {
-	"#version 450 core							\n"
-	"											\n"
-	"out vec4 color;							\n"
-	"											\n"
-	"void main(void)							\n"
-	"{											\n"
-	"	color = vec4(0.0f, 0.8f, 1.0f, 1.0f);	\n"
-	"}											\n"
+	"#version 450 core                          \n"
+	"                                           \n"
+	"out vec4 color;                            \n"
+	"                                           \n"
+	"void main(void)                            \n"
+	"{                                          \n"
+	"	color = vec4(0.0f, 0.8f, 1.0f, 1.0f);   \n"
+	"}                                          \n"
 };
 GLuint rendering_program;
 
