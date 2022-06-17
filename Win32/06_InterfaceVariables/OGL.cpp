@@ -373,12 +373,12 @@ int initialize(void)
 		return -2;
 
 	// create OpenGL rendering context
-	ghrc = wglCreateContext(ghdc);	// calling my first bridging API
+	ghrc = wglCreateContext(ghdc);
 	if (ghrc == NULL)
 		return -3;
 
 	// make the rendering context the current context
-	if (wglMakeCurrent(ghdc, ghrc) == FALSE)	// the second bridging API
+	if (wglMakeCurrent(ghdc, ghrc) == FALSE)
 		return -4;
 	
 	// initialize glew

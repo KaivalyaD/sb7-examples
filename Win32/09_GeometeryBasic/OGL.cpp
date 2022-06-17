@@ -9,13 +9,7 @@
 
 // OpenGL headers
 #include<GL/gl.h>
-#include<GL/GLU.h>
-
-// headers for doing math
-#include<math.h>
-
-// misc. headers
-#include<time.h>
+#include<gl/GLU.h>
 
 // OpenGL libraries
 #pragma comment(lib, "OpenGL32.lib")
@@ -39,36 +33,88 @@ BOOL gbActiveWindow = FALSE;
 // shaders and programs
 static const GLchar *vertex_shader_source[] =
 {
-	"#version 450 core                                                  \n"
+	"#version 460 core                                                  \n"
+	"                                                                   \n"
+	"layout (location = 0) in vec4 offset;                              \n"
 	"                                                                   \n"
 	"void main(void)                                                    \n"
 	"{                                                                  \n"
-	"   // declare a hard-coded array of positions                      \n"
-	"   const vec4 vertices[] = vec4[3](vec4( 0.25, -0.25, 0.5, 1.0 ),  \n"
-	"                                   vec4(-0.25, -0.25, 0.5, 1.0 ),  \n"
-	"                                   vec4( 0.25,  0.25, 0.5, 1.0 )); \n"
+	"   const vec4 vertices[] = vec4[3](vec4( 0.25, -0.25, 0.5, 1.0),   \n"
+	"                                   vec4(-0.25, -0.25, 0.5, 1.0),   \n"
+	"                                   vec4( 0.25,  0.25, 0.5, 1.0));  \n"
 	"                                                                   \n"
-	"   gl_Position = vertices[gl_VertexID];                            \n"
+	"   gl_Position = vertices[gl_VertexID] + offset;                   \n"
 	"}                                                                  \n"
+};
+static const GLchar *tesselation_control_shader_source[] =
+{
+	"#version 460 core                                                            \n"
+	"                                                                             \n"
+	"layout (vertices = 3) out;                                                   \n"
+	"                                                                             \n"
+	"void main(void)                                                              \n"
+	"{                                                                            \n"
+	"   if(gl_InvocationID == 0)                                                  \n"
+	"   {                                                                         \n"
+	"      gl_TessLevelInner[0] = 5.0;                                            \n"
+	"      gl_TessLevelOuter[0] = 5.0;                                            \n"
+	"      gl_TessLevelOuter[1] = 5.0;                                            \n"
+	"      gl_TessLevelOuter[2] = 5.0;                                            \n"
+	"   }                                                                         \n"
+	"                                                                             \n"
+	"   gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position; \n"
+	"}                                                                            \n"
+};
+static const GLchar *tesselation_evaluation_shader_source[] =
+{
+	"#version 460 core                                         \n"
+	"                                                          \n"
+	"layout (triangles, equal_spacing, cw) in;                 \n"
+	"                                                          \n"
+	"void main(void)                                           \n"
+	"{                                                         \n"
+	"   gl_Position = (gl_TessCoord.x * gl_in[0].gl_Position + \n"
+	"                  gl_TessCoord.y * gl_in[1].gl_Position + \n"
+	"                  gl_TessCoord.z * gl_in[2].gl_Position); \n"
+	"}                                                         \n"
+};
+static const GLchar *geometery_shader_source[] =
+{
+	"#version 460 core                         \n"
+	"                                          \n"
+	"layout (triangles) in;                    \n"
+	"layout (points, max_vertices = 3) out;    \n"
+	"                                          \n"
+	"void main(void)                           \n"
+	"{                                         \n"
+	"   int i;                                 \n"
+	"                                          \n"
+	"   for(i = 0; i < gl_in.length(); i++)    \n"
+	"   {                                      \n"
+	"      gl_Position = gl_in[i].gl_Position; \n"
+	"      EmitVertex();                       \n"
+	"   }                                      \n"
+	"}                                         \n"
 };
 static const GLchar *fragment_shader_source[] =
 {
-	"#version 450 core                    \n"
-	"                                     \n"
-	"out vec4 color;                      \n"
-	"                                     \n"
-	"void main(void)                      \n"
-	"{                                    \n"
-	"   color = vec4(0.0, 0.8, 1.0, 1.0); \n"
-	"}                                    \n"
+	"#version 460 core                          \n"
+	"                                           \n"
+	"out vec4 color;                            \n"
+	"                                           \n"
+	"void main(void)                            \n"
+	"{                                          \n"
+	"   color = vec4(0.0f, 0.8f, 1.0f, 1.0f);   \n"
+	"}                                          \n"
 };
 GLuint rendering_program;
 
 // required for programmable pipeline of OpenGL
 GLuint vertex_array_object;
 
-// rendering globals
+// rendering global
 GLfloat color[4];
+GLfloat positionVertexAttrib[4];
 
 // entry-point function
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int iCmdShow)
@@ -177,7 +223,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	ShowWindow(hwnd, iCmdShow);
 
 	// foregrounding and focussing the window
-	SetForegroundWindow(hwnd);	// using ghwnd is obviously fine, but by common sense, ghwnd is for global use while we have hwnd locally available in WndProc and here
+	SetForegroundWindow(hwnd);	// using ghwnd is obviously fine, but by common sense ghwnd is for global use while we have hwnd locally available in WndProc and here
 	SetFocus(hwnd);
 
 	// game loop
@@ -257,7 +303,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 		resize(LOWORD(lParam), HIWORD(lParam));
 		break;
-	case WM_CLOSE:	// processed after the X button is pressed and before WM_DESTROY is processed
+	case WM_CLOSE:	// disciplined code: sent as a signal that a window or an application should terminate
 		DestroyWindow(hwnd);
 		break;
 	case WM_DESTROY:
@@ -328,7 +374,7 @@ int initialize(void)
 
 	// code
 	// initialize PIXELFORMATDESCRIPTOR
-	ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR)); // memset((void *)&pfd, NULL, sizeof(PIXELFORMATDESCRIPTOR));
+	ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
@@ -359,16 +405,16 @@ int initialize(void)
 	// make the rendering context the current context
 	if (wglMakeCurrent(ghdc, ghrc) == FALSE)
 		return -4;
-
-	// initialize GLEW
+	
+	// initialize glew
 	ret = glewInit();
 	if (ret != GLEW_OK)
 		return -5;
 
-	// compile shaders
+	// compile the shaders
 	rendering_program = compile_shaders();
-	
-	// create and bind vertex array objects
+
+	// create and bind the vertex array object
 	glCreateVertexArrays(1, &vertex_array_object);
 	glBindVertexArray(vertex_array_object);
 
@@ -387,6 +433,9 @@ GLuint compile_shaders(void)
 	// variable declarations
 	GLuint vertex_shader = 0;
 	GLuint fragment_shader = 0;
+	GLuint tesselation_control_shader = 0;
+	GLuint tesselation_evaluation_shader = 0;
+	GLuint geometery_shader = 0;
 	GLuint program = 0;
 	int len;
 	char buf[1024];
@@ -402,12 +451,42 @@ GLuint compile_shaders(void)
 	else
 		fprintf(gpLog, "Vertex shader compiled without errors\n");
 
+	// create and compile the tesselation control shader
+	tesselation_control_shader = glCreateShader(GL_TESS_CONTROL_SHADER);
+	glShaderSource(tesselation_control_shader, 1, tesselation_control_shader_source, NULL);
+	glCompileShader(tesselation_control_shader);
+	glGetShaderInfoLog(tesselation_control_shader, sizeof(buf), &len, buf);
+	if (len)
+		fprintf(gpLog, "\nTesselation control shader: compilation errors:\n%s", buf);
+	else
+		fprintf(gpLog, "Tesselation control shader compiled without errors\n");
+
+	// create and compile the tesselation evaluation shader
+	tesselation_evaluation_shader = glCreateShader(GL_TESS_EVALUATION_SHADER);
+	glShaderSource(tesselation_evaluation_shader, 1, tesselation_evaluation_shader_source, NULL);
+	glCompileShader(tesselation_evaluation_shader);
+	glGetShaderInfoLog(tesselation_evaluation_shader, sizeof(buf), &len, buf);
+	if (len)
+		fprintf(gpLog, "\nTesselation evaluation shader: compilation errors:\n%s", buf);
+	else
+		fprintf(gpLog, "Tesselation evaluation shader compiled without errors\n");
+
+	// create and compile the geometery shader
+	geometery_shader = glCreateShader(GL_GEOMETRY_SHADER);
+	glShaderSource(geometery_shader, 1, geometery_shader_source, NULL);
+	glCompileShader(geometery_shader);
+	glGetShaderInfoLog(geometery_shader, sizeof(buf), &len, buf);
+	if (len)
+		fprintf(gpLog, "\nGeometery shader: compilation errors:\n%s", buf);
+	else
+		fprintf(gpLog, "Gemoetery shader compiled without errors\n");
+
 	// create and compile the fragment shader
 	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragment_shader, 1, fragment_shader_source, NULL);
 	glCompileShader(fragment_shader);
 	glGetShaderInfoLog(fragment_shader, sizeof(buf), &len, buf);
-	if (len)
+	if(len)
 		fprintf(gpLog, "\nFragment shader: compilation errors:\n%s", buf);
 	else
 		fprintf(gpLog, "Fragment shader compiled without errors\n");
@@ -415,17 +494,23 @@ GLuint compile_shaders(void)
 	// create a program object, attach the shaders to it, and link it
 	program = glCreateProgram();
 	glAttachShader(program, vertex_shader);
+	glAttachShader(program, tesselation_control_shader);
+	glAttachShader(program, tesselation_evaluation_shader);
+	glAttachShader(program, geometery_shader);
 	glAttachShader(program, fragment_shader);
 	glLinkProgram(program);
 	glGetProgramInfoLog(program, sizeof(buf), &len, buf);
-	if (len)
+	if(len)
 		fprintf(gpLog, "\nProgram: linking errors:\n%s\n", buf);
 	else
 		fprintf(gpLog, "Program linked without errors\n");
 
 	// delete created shader objects for they are now copied into the program
-	glDeleteShader(vertex_shader);
 	glDeleteShader(fragment_shader);
+	glDeleteShader(geometery_shader);
+	glDeleteShader(tesselation_evaluation_shader);
+	glDeleteShader(tesselation_control_shader);
+	glDeleteShader(vertex_shader);
 
 	return program;
 }
@@ -440,15 +525,13 @@ void resize(int width, int height)
 }
 
 void display(void)
-{
+{	
 	// code
 	glClearBufferfv(GL_COLOR, 0, color);
-
-	// use the program object we created earlier for rendering
+	
 	glUseProgram(rendering_program);
-
-	// draw one point
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glPointSize(2.0f);
+	glDrawArrays(GL_PATCHES, 0, 3);
 
 	SwapBuffers(ghdc);
 }
@@ -460,6 +543,12 @@ void update(void)
 	color[1] = 0.2f;
 	color[2] = 0.0f;
 	color[3] = 1.0f;
+
+	positionVertexAttrib[0] = 0.0f;
+	positionVertexAttrib[1] = 0.0f;
+	positionVertexAttrib[2] = 0.0f;
+	positionVertexAttrib[3] = 0.0f;
+	glVertexAttrib4fv(0, positionVertexAttrib);
 }
 
 void uninitialize(void)
